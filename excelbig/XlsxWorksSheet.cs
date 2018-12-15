@@ -30,25 +30,54 @@ namespace excelbig
             Writer.WriteStartElement(new Row());
             for (int i = 0; i < cells.Count(); i++)
             {
-                var style = !string.IsNullOrEmpty(cells[i].FormatName) ? Style.CellFormats[cells[i].FormatName] : "1";
-                var attributes = new OpenXmlAttribute[] { new OpenXmlAttribute("s", null, style) }.ToList();
-                //var attributes = new OpenXmlAttribute[] { new OpenXmlAttribute("s", null, "2") }.ToList();
-
-                attributes.Add(new OpenXmlAttribute("t", null, "s"));//shared string type
-                Writer.WriteStartElement(new Cell(), attributes);
-                if (!ShareStringDictionary.ContainsKey(cells[i].Value))
+                switch(cells[i])
                 {
-                    ShareStringDictionary.Add(cells[i].Value, ShareStringDictionary.Keys.Count());
+                    case XlsxSharedStringCell sc:
+                        WriteSharedString(sc);
+                        break;
+                    case XlsxDateCell dc:
+                        WriteDate(dc);
+                        break;
                 }
-
-                //writing the index as the cell value
-                Writer.WriteElement(new CellValue(ShareStringDictionary[cells[i].Value].ToString()));
-
-
-                Writer.WriteEndElement();//cell
-
             }
             Writer.WriteEndElement(); //end of Row tag
+        }
+
+        private void WriteSharedString(XlsxSharedStringCell cell)
+        {
+            var style = !string.IsNullOrEmpty(cell.FormatName) ? Style.CellFormats[cell.FormatName] : "0";
+            var attributes = new OpenXmlAttribute[] { new OpenXmlAttribute("s", null, style) }.ToList();
+            
+            attributes.Add(new OpenXmlAttribute("t", null, "s"));//shared string type
+            Writer.WriteStartElement(new Cell(), attributes);
+            if (!ShareStringDictionary.ContainsKey(cell.Value))
+            {
+                ShareStringDictionary.Add(cell.Value, ShareStringDictionary.Keys.Count());
+            }
+
+            //writing the index as the cell value
+            Writer.WriteElement(new CellValue(ShareStringDictionary[cell.Value].ToString()));
+            
+            Writer.WriteEndElement();//cell
+        }
+
+        private void WriteDate(XlsxDateCell cell)
+        {
+            var style = !string.IsNullOrEmpty(cell.FormatName) ? Style.CellFormats[cell.FormatName] : "0";
+            var attributes = new OpenXmlAttribute[] { new OpenXmlAttribute("s", null, style) }.ToList();
+
+            if (attributes == null)
+            {
+                Writer.WriteStartElement(new Cell() { DataType = CellValues.Number });
+            }
+            else
+            {
+                Writer.WriteStartElement(new Cell() { DataType = CellValues.Number }, attributes);
+            }
+
+            Writer.WriteElement(new CellValue(cell.Value));
+
+            Writer.WriteEndElement();
         }
 
         public void Dispose()

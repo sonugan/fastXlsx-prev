@@ -11,12 +11,25 @@ namespace excelbig
         private readonly WorkbookPart WorkbookPart;
         private readonly Stylesheet Stylesheet;
         public readonly Dictionary<string, string> CellFormats;
+        private uint IExcelIndex = 165; //number less than 164 is reserved by excel for default formats (number formats)
 
         public XlsxStyleSheet(WorkbookPart workbookPart)
         {
             WorkbookPart = workbookPart;
             Stylesheet = CreateDefaultStylesheet();
             CellFormats = new Dictionary<string, string>();
+        }
+
+        public UInt32Value AddDateFormat(string format)
+        {
+            var nfs = Stylesheet.NumberingFormats;            
+            NumberingFormat nf;
+            nf = new NumberingFormat();
+            nf.NumberFormatId = IExcelIndex++;
+            nf.FormatCode = format;
+            nfs.Append(nf);
+            nfs.Count = (uint)nfs.ChildElements.Count;
+            return nf.NumberFormatId;
         }
 
         public void AddCellFormat(XlsxCellFormat format)
@@ -35,12 +48,36 @@ namespace excelbig
             Stylesheet.Fills.Append(fill);
             Stylesheet.Fills.Count = (uint)Stylesheet.Fills.ChildElements.Count;
 
+            var numberFormatId = 0U;
+            if(!string.IsNullOrEmpty(format.NumberFormat))
+            {
+                numberFormatId = AddDateFormat(format.NumberFormat);
+            }
+
+            if(format.Border != null)
+            {
+                var leftColor = format.Border.Color != null ? new Color() { Rgb = HexBinaryValue.FromString(format.Border.Color.HexaCode) } : new Color() { Auto = true };
+                var rightColor = format.Border.Color != null ? new Color() { Rgb = HexBinaryValue.FromString(format.Border.Color.HexaCode) } : new Color() { Auto = true };
+                var topColor = format.Border.Color != null ? new Color() { Rgb = HexBinaryValue.FromString(format.Border.Color.HexaCode) } : new Color() { Auto = true };
+                var bottomColor = format.Border.Color != null ? new Color() { Rgb = HexBinaryValue.FromString(format.Border.Color.HexaCode) } : new Color() { Auto = true };
+                var diagonalColor = format.Border.Color != null ? new Color() { Rgb = HexBinaryValue.FromString(format.Border.Color.HexaCode) } : new Color() { Auto = true };
+                
+                Border border = new Border();
+                border.LeftBorder = new LeftBorder(leftColor) { Style = format.Border.LeftBorder };
+                border.RightBorder = new RightBorder(rightColor) { Style = format.Border.LeftBorder };
+                border.TopBorder = new TopBorder(topColor) { Style = format.Border.LeftBorder };
+                border.BottomBorder = new BottomBorder(bottomColor) { Style = format.Border.LeftBorder };
+                border.DiagonalBorder = new DiagonalBorder(diagonalColor) { Style = format.Border.LeftBorder };
+                Stylesheet.Borders.Append(border);
+                Stylesheet.Borders.Count = (uint)Stylesheet.Borders.ChildElements.Count;
+            }
+
             var cf = new CellFormat();
-            cf.NumberFormatId = 0;
+            cf.NumberFormatId = numberFormatId;
             cf.FontId = 0;
             cf.FillId = Stylesheet.Fills.Count - 1;
             cf.ApplyFill = true;
-            cf.BorderId = 0;
+            cf.BorderId = format.Border != null ? Stylesheet.Borders.Count - 1 : 0;
             cf.FormatId = 0;
             Stylesheet.CellFormats.Append(cf);
 

@@ -110,9 +110,11 @@
     <Compile Include="OpenXmlWriterHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XlsxBorder.cs" />
     <Compile Include="XlsxCellFormat.cs" />
     <Compile Include="XlsxColor.cs" />
     <Compile Include="XlsxCell.cs" />
+    <Compile Include="XlsxDateCell.cs" />
     <Compile Include="XlsxSharedStringCell.cs" />
     <Compile Include="XlsxStyleSheet.cs" />
     <Compile Include="XlsxWorksSheet.cs" />
