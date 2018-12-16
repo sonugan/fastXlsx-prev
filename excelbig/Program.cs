@@ -66,7 +66,11 @@ namespace excelbig
                 var sheet = new Sheet() { Id = workbookPart.GetIdOfPart(worksheetPart), SheetId = 1, Name = "Sheet1" };
                 sheets.Append(sheet);
                 
-                using (var worksheet = new XlsxWorksSheet(style, workbookPart, worksheetPart))
+                using (var worksheet = new XlsxWorksSheet(style, workbookPart, worksheetPart, new List<XlsxColumn>()
+                {
+                    new XlsxColumn(){ ColumnNumber = 1, Width = 25 },
+                    new XlsxColumn(){ ColumnNumber = 2, Width = 25 }
+                }))
                 {
                     worksheet.WriteRow(new List<XlsxCell>()
                         {

@@ -16,15 +16,61 @@ namespace excelbig
         private readonly WorkbookPart WorkbookPart;
         private readonly XlsxStyleSheet Style;
 
-        public XlsxWorksSheet(XlsxStyleSheet style, WorkbookPart workbookPart, WorksheetPart worksheetPart)
+        public XlsxWorksSheet(XlsxStyleSheet style, WorkbookPart workbookPart, WorksheetPart worksheetPart, IList<XlsxColumn> columns)
         {
             Style = style;
             WorkbookPart = workbookPart;
             Writer = OpenXmlWriter.Create(worksheetPart);
             Writer.WriteStartElement(new Worksheet());
+
+            //TODO: definir las columnas INI
+            WriteColumnDefinition(columns);
+            //TODO: definir las columnas FIN
+
             Writer.WriteStartElement(new SheetData()); // TODO: poner en una clase sheet
         }
 
+        private void WriteColumnDefinition(IList<XlsxColumn> columns)
+        {
+            var orderedColumns = columns
+                .OrderBy(c => c.ColumnNumber)
+                .Aggregate(new List<XlsxColumnGroup>(), (l, c) =>
+                {
+                    if (l.Any() && l.Last().Width == c.Width)
+                    {
+                        l.Last().MaxColumnNumber = c.ColumnNumber;
+                    }
+                    else
+                    {
+                        l.Add(new XlsxColumnGroup(c.ColumnNumber, c.Width));
+                    }
+                    return l;
+                });
+
+            Writer.WriteStartElement(new Columns());
+            foreach (var column in orderedColumns)
+            {
+                //List<OpenXmlAttribute> attrs = new List<OpenXmlAttribute>();
+                //attrs = new List<OpenXmlAttribute>();
+                //// min and max are required attributes
+                //// This means from columns 2 to 4, both inclusive
+                //attrs.Add(new OpenXmlAttribute("min", null, "2"));
+                //attrs.Add(new OpenXmlAttribute("max", null, "4"));
+                //attrs.Add(new OpenXmlAttribute("width", null, "25"));
+                //Writer.WriteStartElement(new Column(), attrs);
+                //Writer.WriteEndElement();
+
+                List<OpenXmlAttribute> attrs = new List<OpenXmlAttribute>();
+                attrs = new List<OpenXmlAttribute>();
+                attrs.Add(new OpenXmlAttribute("min", null, column.MinColumnNumber.ToString()));
+                attrs.Add(new OpenXmlAttribute("max", null, column.MaxColumnNumber.ToString()));
+                attrs.Add(new OpenXmlAttribute("width", null, column.Width.ToString()));
+                Writer.WriteStartElement(new Column(), attrs);
+                Writer.WriteEndElement();
+            }
+            Writer.WriteEndElement();
+        }
+        
         public void WriteRow(IList<XlsxCell> cells)
         {
             Writer.WriteStartElement(new Row());
