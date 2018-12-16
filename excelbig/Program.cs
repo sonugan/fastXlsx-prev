@@ -42,14 +42,17 @@ namespace excelbig
                 //openXmlExportHelper.SaveCustomStylesheet(workbookPart);
                 var style = new XlsxStyleSheet(workbookPart);
 
-                style.AddCellFormat(new XlsxCellFormat() { Name = "Data", ForegroundColor = new XlsxColor("bb4055") });
-                style.AddCellFormat(new XlsxCellFormat()
+                var dataStyle = new XlsxCellFormat() { Name = "Data", ForegroundColor = new XlsxColor("bb4055") };
+                style.AddCellFormat(dataStyle);
+                var headerStyle = new XlsxCellFormat()
                 {
                     Name = "Header",
                     ForegroundColor = new XlsxColor("C8EEFF"),
                     Border = XlsxBorder.CreateBox(BorderStyleValues.Medium, new XlsxColor("bb4055"))
-                });
-                style.AddCellFormat(new XlsxCellFormat() { Name = "DataDate", ForegroundColor = new XlsxColor("bb4055"), NumberFormat = @"[$-409]m/d/yy\ h:mm\ AM/PM;@" });
+                };
+                style.AddCellFormat(headerStyle);
+                style.AddCellFormat(new XlsxCellFormat("DataDate", dataStyle) { NumberFormat = @"[$-409]m/d/yy\ h:mm\ AM/PM;@" });
+                style.AddCellFormat(new XlsxCellFormat() { Name = "DataDateWhite", NumberFormat = @"[$-409]m/d/yy\ h:mm\ AM/PM;@" });
 
                 style.Save();
 
@@ -78,7 +81,7 @@ namespace excelbig
                     foreach(var data in GenerateData())
                     {
                         var format = "";
-                        var formatDate = "";
+                        var formatDate = "DataDateWhite";
                         if (!odd)
                         {
                             format = "Data";
@@ -91,7 +94,7 @@ namespace excelbig
                         }
                         worksheet.WriteRow(new List<XlsxCell>()
                         {
-                            new XlsxSharedStringCell(data.Id.ToString(), format),
+                            new XlsxNumberCell(data.Id, format),
                             new XlsxSharedStringCell(data.Name, format),
                             new XlsxSharedStringCell(data.Lastname, format),
                             new XlsxSharedStringCell(data.DocumentNumber, format),
@@ -112,9 +115,9 @@ namespace excelbig
                 data.Add(new Data()
                 {
                     Id = i,
-                    Name = "asdfasdfasdfasdfasdfasdfs",
-                    Lastname = "asdfasdfasdfasdfasdfasdfasdf",
-                    DocumentNumber = "asdfasdfasdfasdfasdf",
+                    Name = (DateTime.Now.Ticks * i).ToString(),
+                    Lastname = (DateTime.Now.Ticks * i).ToString(),
+                    DocumentNumber = (DateTime.Now.Ticks * i).ToString(),
                     Birthdate = DateTime.Now
                 });
             }

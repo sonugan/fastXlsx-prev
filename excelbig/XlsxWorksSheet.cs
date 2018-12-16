@@ -38,6 +38,9 @@ namespace excelbig
                     case XlsxDateCell dc:
                         WriteDate(dc);
                         break;
+                    case XlsxNumberCell nc:
+                        WriteNumber(nc);
+                        break;
                 }
             }
             Writer.WriteEndElement(); //end of Row tag
@@ -79,6 +82,26 @@ namespace excelbig
 
             Writer.WriteEndElement();
         }
+
+        private void WriteNumber(XlsxNumberCell cell)
+        {
+            var style = !string.IsNullOrEmpty(cell.FormatName) ? Style.CellFormats[cell.FormatName] : "0";
+            var attributes = new OpenXmlAttribute[] { new OpenXmlAttribute("s", null, style) }.ToList();
+
+            if (attributes == null)
+            {
+                Writer.WriteStartElement(new Cell() { DataType = CellValues.Number });
+            }
+            else
+            {
+                Writer.WriteStartElement(new Cell() { DataType = CellValues.Number }, attributes);
+            }
+
+            Writer.WriteElement(new CellValue(cell.Value));
+
+            Writer.WriteEndElement();
+        }
+
 
         public void Dispose()
         {

@@ -12,12 +12,16 @@ namespace excelbig
         private readonly Stylesheet Stylesheet;
         public readonly Dictionary<string, string> CellFormats;
         private uint IExcelIndex = 165; //number less than 164 is reserved by excel for default formats (number formats)
+        public const string DefaultStyle = "Default";
 
         public XlsxStyleSheet(WorkbookPart workbookPart)
         {
             WorkbookPart = workbookPart;
             Stylesheet = CreateDefaultStylesheet();
-            CellFormats = new Dictionary<string, string>();
+            CellFormats = new Dictionary<string, string>()
+            {
+                { DefaultStyle, "0" }
+            };
         }
 
         public UInt32Value AddDateFormat(string format)
@@ -34,20 +38,24 @@ namespace excelbig
 
         public void AddCellFormat(XlsxCellFormat format)
         {
-            var fill = new Fill()
+            var fillNumber = 0U;
+            if (format.ForegroundColor != null)
             {
-                PatternFill = new PatternFill()
+                var fill = new Fill()
                 {
-                    PatternType = PatternValues.Solid,
-                    ForegroundColor = new ForegroundColor()
+                    PatternFill = new PatternFill()
                     {
-                        Rgb = HexBinaryValue.FromString(format.ForegroundColor.HexaCode)
+                        PatternType = PatternValues.Solid,
+                        ForegroundColor = new ForegroundColor()
+                        {
+                            Rgb = HexBinaryValue.FromString(format.ForegroundColor.HexaCode)
+                        }
                     }
-                }
-            };
-            Stylesheet.Fills.Append(fill);
-            Stylesheet.Fills.Count = (uint)Stylesheet.Fills.ChildElements.Count;
-
+                };
+                Stylesheet.Fills.Append(fill);
+                Stylesheet.Fills.Count = (uint)Stylesheet.Fills.ChildElements.Count;
+                fillNumber = Stylesheet.Fills.Count - 1;
+            }
             var numberFormatId = 0U;
             if(!string.IsNullOrEmpty(format.NumberFormat))
             {
@@ -75,7 +83,7 @@ namespace excelbig
             var cf = new CellFormat();
             cf.NumberFormatId = numberFormatId;
             cf.FontId = 0;
-            cf.FillId = Stylesheet.Fills.Count - 1;
+            cf.FillId = fillNumber;
             cf.ApplyFill = true;
             cf.BorderId = format.Border != null ? Stylesheet.Borders.Count - 1 : 0;
             cf.FormatId = 0;
@@ -86,7 +94,7 @@ namespace excelbig
                 throw new Exception($"Formato duplicado {format.Name}");
             }
             Stylesheet.CellFormats.Count = (uint)Stylesheet.CellFormats.ChildElements.Count;
-            CellFormats.Add(format.Name, $"{CellFormats.Count + 1}"); //Tengo un estilo por default provisto por excel
+            CellFormats.Add(format.Name, $"{CellFormats.Count}"); //Tengo un estilo por default provisto por excel
         }
 
         public void Save()

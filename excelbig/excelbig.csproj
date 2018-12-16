@@ -114,6 +114,7 @@
     <Compile Include="XlsxCellFormat.cs" />
     <Compile Include="XlsxColor.cs" />
     <Compile Include="XlsxCell.cs" />
+    <Compile Include="XlsxNumberCell.cs" />
     <Compile Include="XlsxDateCell.cs" />
     <Compile Include="XlsxSharedStringCell.cs" />
     <Compile Include="XlsxStyleSheet.cs" />
